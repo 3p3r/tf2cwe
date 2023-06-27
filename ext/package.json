@@ -1,0 +1,55 @@
+{
+  "name": "tf2cwe2rego",
+  "displayName": "TF2CWE2REGO",
+  "description": "Terraform to CloudWatch Events to Rego policies",
+  "version": "1.0.0",
+  "publisher": "MassiveDynamics",
+  "license": "MIT",
+  "author": "Sepehr Laal",
+  "repository": {
+    "type": "git",
+    "repository": "git+https://github.com/mneil/tf2cwe.git"
+  },
+  "engines": {
+    "vscode": "^1.65.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension",
+  "contributes": {
+    "commands": [
+      {
+        "command": "tf2cwe2rego.validate",
+        "title": "Validate Terraform Events with OPA"
+      }
+    ],
+    "configuration": {
+      "title": "TF2CWE2REGO",
+      "properties": {
+        "tf2cwe2rego.validate.eventRuleJsonString": {
+          "type": "string",
+          "description": "The CloudWatch Events rule to use as the policy",
+          "default": "{\"source\":[\"aws.ec2\"],\"detail-type\":[\"EC2 Instance State-change Notification\"],\"detail\":{\"state\":[\"running\"]}}"
+        },
+        "tf2cwe2rego.validate.eventRuleJsonPath": {
+          "type": "string",
+          "description": "The path to the CloudWatch Events rule to use as the policy",
+          "default": ""
+        }
+      }
+    },
+    "menus": {
+      "explorer/context": [
+        {
+          "when": "true",
+          "command": "tf2cwe2rego.validate",
+          "group": "inline"
+        }
+      ]
+    }
+  }
+}

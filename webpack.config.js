@@ -3,13 +3,16 @@ const path = require("path");
 const webpack = require("webpack");
 const CopyPlugin = require("copy-webpack-plugin");
 
-module.exports = (env, argv) => {
+module.exports = (_, argv) => {
+  const mode = String(argv.mode).toLowerCase().startsWith("d") ? "development" : "production";
+  const devtool = mode === "development" ? "inline-source-map" : false;
+  console.log(`Building in ${mode} mode`);
   /** @type {webpack.Configuration} */
-  const config = {
-    mode: argv.mode === "development" ? "development" : "production",
+  const lib = {
+    mode,
     entry: "./lib/index.ts",
     target: "node",
-    devtool: false,
+    devtool,
     output: {
       path: path.resolve(__dirname, "dist", "lib"),
       library: {
@@ -70,11 +73,12 @@ module.exports = (env, argv) => {
       extensions: [".ts", ".js"],
     },
   };
+  /** @type {webpack.Configuration} */
   const bin = {
-    mode: argv.mode === "development" ? "development" : "production",
+    mode,
     entry: "./bin/tf2cwe.ts",
     target: "node",
-    devtool: false,
+    devtool,
     output: {
       path: path.resolve(__dirname, "dist", "bin"),
       globalObject: `(typeof self !== 'undefined' ? self : this)`,
@@ -105,7 +109,54 @@ module.exports = (env, argv) => {
       extensions: [".ts", ".js"],
     },
   };
-  return [config, bin];
+  /** @type {webpack.Configuration} */
+  // todo: bake in all wasm files
+  const ext = {
+    mode,
+    entry: "./ext/extension.ts",
+    target: "node",
+    devtool,
+    output: {
+      path: path.resolve(__dirname, "ext", "dist"),
+      filename: "extension.js",
+      libraryTarget: "commonjs2",
+    },
+    externals: {
+      vscode: "commonjs vscode",
+    },
+    externalsPresets: { node: true },
+    resolve: {
+      extensions: [".ts", ".js"],
+    },
+    optimization: {
+      minimize: argv.mode === "development" ? false : true,
+      nodeEnv: false,
+    },
+    node: {
+      global: false,
+      __dirname: false,
+      __filename: false,
+    },
+    module: {
+      rules: [
+        {
+          test: /\.ts$/,
+          exclude: /node_modules/,
+          use: [
+            {
+              loader: "ts-loader",
+              options: {
+                compilerOptions: {
+                  module: "es6",
+                },
+              },
+            },
+          ],
+        },
+      ],
+    },
+  };
+  return [lib, bin, ext];
 };
 
 class AfterBuild {
